@@ -1,233 +1,659 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Will You Be My Valentine? 💕</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 50%, #f67280 100%);
-            overflow: hidden;
-        }
-        .container {
-            text-align: center;
-            background: white;
-            padding: 50px 40px;
-            border-radius: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-            width: 90%;
-            position: relative;
-        }
-        h1 {
-            color: #ff1744;
-            margin-bottom: 20px;
-            font-size: 36px;
-            text-shadow: 2px 2px 4px rgba(255, 23, 68, 0.2);
-        }
-        .heart {
-            font-size: 80px;
-            margin: 20px 0;
-            animation: heartbeat 1.5s infinite;
-        }
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            10%, 30% { transform: scale(1.1); }
-            20%, 40% { transform: scale(1); }
-        }
-        .question {
-            font-size: 24px;
-            color: #333;
-            margin: 30px 0;
-            font-weight: 600;
-        }
-        .button-container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 40px;
-            min-height: 60px;
-            position: relative;
-        }
-        button {
-            border: none;
-            padding: 15px 50px;
-            font-size: 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        #yesBtn {
-            background: linear-gradient(135deg, #ff6b9d 0%, #ff1744 100%);
-            color: white;
-        }
-        #yesBtn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(255, 23, 68, 0.5);
-        }
-        #noBtn {
-            background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
-            color: #666;
-            position: absolute;
-            transition: all 0.2s ease;
-        }
-        #noBtn:hover {
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-            color: white;
-        }
-        .celebration {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 23, 68, 0.95);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .celebration.show {
-            display: flex;
-        }
-        .celebration-content {
-            text-align: center;
-            color: white;
-            animation: bounceIn 0.8s ease;
-        }
-        @keyframes bounceIn {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        .celebration h2 {
-            font-size: 60px;
-            margin-bottom: 30px;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
-        }
-        .celebration .message {
-            font-size: 32px;
-            margin: 20px 0;
-            font-weight: bold;
-        }
-        .celebration .funny-message {
-            font-size: 24px;
-            margin-top: 30px;
-            font-style: italic;
-            max-width: 600px;
-            padding: 0 20px;
-        }
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: white;
-            position: absolute;
-            animation: confetti-fall 3s linear infinite;
-        }
-        @keyframes confetti-fall {
-            to {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MilkTrack — Farm Portal</title>
+  <meta name="description" content="Register milk cars, track lab approvals and SAP records">
+  <meta name="theme-color" content="#2A5C3F">
+
+  <!-- PWA Meta -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MilkTrack">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Firebase SDKs (using CDN compat versions for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Hey Kiara! 💕</h1>
-        <div class="heart">❤️</div>
-        <p class="question">Will you be my Valentine? 🌹</p>
-        <div class="button-container">
-            <button id="yesBtn" onclick="celebrate()">Yes! 💖</button>
-            <button id="noBtn" onmouseover="moveButton()" ontouchstart="moveButton()">No 😢</button>
-        </div>
+
+<!-- ═══════════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">🥛</div>
+      <div class="auth-title">MilkTrack</div>
+      <div class="auth-subtitle">Farm Registration Portal</div>
     </div>
 
-    <div class="celebration" id="celebration">
-        <div class="celebration-content">
-            <h2>YAAAAY! 🎉🎊</h2>
-            <div class="message">I knew you'd say yes! 😄</div>
-            <div class="heart" style="font-size: 120px;">❤️💕💖</div>
-            <div class="funny-message">
-                I mean, the "No" button was basically running a marathon to avoid you! 
-                Good thing you're faster! 😂<br><br>
-                I love you Keriiii! 💕💕💕<br>
-                Can't wait for our Valentine's date! 🥰
+    <div class="auth-tabs">
+      <div class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Register Farm</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="auth-login" class="auth-body">
+      <div class="auth-form-group">
+        <label class="auth-label">Email Address</label>
+        <input class="auth-input" id="login-email" type="email" placeholder="farm@example.com" autocomplete="email">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Password</label>
+        <div class="auth-input-wrap">
+          <input class="auth-input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')handleLogin()">
+          <button class="pw-toggle" onclick="togglePassword('login-password')">👁</button>
+        </div>
+      </div>
+      <button class="auth-btn" data-label="Sign In" onclick="handleLogin()">Sign In →</button>
+      <div class="auth-divider">— or —</div>
+      <div style="text-align:center;font-size:13px;color:var(--text-muted)">No account? <a href="#" style="color:var(--primary);font-weight:600;text-decoration:none" onclick="switchAuthTab('register')">Register your farm</a></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="auth-register" class="auth-body" style="display:none">
+      <div class="auth-form-group">
+        <label class="auth-label">Contact Name</label>
+        <input class="auth-input" id="reg-name" type="text" placeholder="Your full name" autocomplete="name">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Farm ID / License Number</label>
+        <input class="auth-input" id="reg-farmid" type="text" placeholder="e.g. FM-0041">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Email Address</label>
+        <input class="auth-input" id="reg-email" type="email" placeholder="farm@example.com" autocomplete="email">
+      </div>
+      <div class="auth-form-group">
+        <label class="auth-label">Password</label>
+        <div class="auth-input-wrap">
+          <input class="auth-input" id="reg-password" type="password" placeholder="Min 6 characters" autocomplete="new-password">
+          <button class="pw-toggle" onclick="togglePassword('reg-password')">👁</button>
+        </div>
+      </div>
+      <button class="auth-btn" data-label="Create Account" onclick="handleRegister()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     APP SCREEN
+═══════════════════════════════════════════ -->
+<div id="app-screen" style="display:none;flex-direction:column;min-height:100vh">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-logo">🥛 <span>MilkTrack</span></div>
+    <div class="topbar-right">
+      <button class="topbar-btn" onclick="showView('notifications')" title="Notifications">
+        🔔
+        <span id="pending-badge"></span>
+      </button>
+      <div class="topbar-avatar" id="user-initials" onclick="showView('profile')">?</div>
+    </div>
+  </div>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <span id="page-title">My Registrations</span>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── MY REGISTRATIONS ── -->
+    <div id="view-my-registrations" class="view active">
+      <!-- Welcome strip -->
+      <div class="welcome-banner">
+        <div class="wb-greeting">Good day,</div>
+        <div class="wb-name" id="user-name">Loading...</div>
+        <div class="wb-sub">Here are your milk car submissions</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-strip">
+        <div class="stat-chip">
+          <div class="stat-chip-val blue" id="stat-total">—</div>
+          <div class="stat-chip-lbl">Total</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-val gold" id="stat-pending">—</div>
+          <div class="stat-chip-lbl">Pending</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-val green" id="stat-approved">—</div>
+          <div class="stat-chip-lbl">Approved</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-val green" id="stat-tons">—</div>
+          <div class="stat-chip-lbl">Tons OK</div>
+        </div>
+      </div>
+
+      <!-- Registration list -->
+      <div class="registrations-container">
+        <div class="section-label">Your Submissions</div>
+        <div id="registrations-list">
+          <!-- Populated by JS -->
+          <div class="empty-state">
+            <div style="font-size:32px;margin-bottom:8px">⏳</div>
+            <div style="color:var(--text-muted)">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── NEW REGISTRATION ── -->
+    <div id="view-new-reg" class="view">
+      <div class="form-container">
+
+        <!-- Status flow indicator -->
+        <div class="form-card" style="margin-bottom:14px;padding:14px 16px">
+          <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Registration Process</div>
+          <div class="status-flow">
+            <div class="sf-step">
+              <div class="sf-dot current">1</div>
+              <div class="sf-label">Register</div>
             </div>
+            <div class="sf-line"></div>
+            <div class="sf-step">
+              <div class="sf-dot">2</div>
+              <div class="sf-label">Approval</div>
+            </div>
+            <div class="sf-line"></div>
+            <div class="sf-step">
+              <div class="sf-dot">3</div>
+              <div class="sf-label">Come to Lab</div>
+            </div>
+            <div class="sf-line"></div>
+            <div class="sf-step">
+              <div class="sf-dot">4</div>
+              <div class="sf-label">Lab Analysis</div>
+            </div>
+            <div class="sf-line"></div>
+            <div class="sf-step">
+              <div class="sf-dot">5</div>
+              <div class="sf-label">SAP Record</div>
+            </div>
+          </div>
         </div>
+
+        <form id="reg-form" onsubmit="return false" class="form-card">
+          <!-- Vehicle Info -->
+          <div class="form-section">
+            <div class="form-section-title">🚛 Vehicle Information</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Car Plate <span class="required-star">*</span></label>
+                <input class="form-input" id="f-plate" type="text" placeholder="ABC-1234" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Driver Name <span class="required-star">*</span></label>
+                <input class="form-input" id="f-driver" type="text" placeholder="Full name" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Milk Info -->
+          <div class="form-section" style="margin-top:4px">
+            <div class="form-section-title">🥛 Milk Details</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Quantity (Tons) <span class="required-star">*</span></label>
+                <input class="form-input" id="f-qty" type="number" step="0.1" min="0.1" placeholder="0.0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Milk Type</label>
+                <select class="form-select" id="f-type">
+                  <option value="Fresh Whole Milk">Fresh Whole Milk</option>
+                  <option value="Skimmed Milk">Skimmed Milk</option>
+                  <option value="Semi-Skimmed">Semi-Skimmed</option>
+                  <option value="Cream">Cream</option>
+                  <option value="Organic Milk">Organic Milk</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Temperature on Departure (°C)</label>
+                <input class="form-input" id="f-temp" type="number" step="0.1" placeholder="4.0">
+                <div class="form-hint">Must be ≤ 6°C</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Expected Arrival <span class="required-star">*</span></label>
+                <input class="form-input" id="f-arrival" type="datetime-local" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-section" style="margin-top:4px;padding-bottom:4px">
+            <div class="form-section-title">📝 Additional Notes</div>
+            <div class="form-group">
+              <textarea class="form-textarea" id="f-notes" placeholder="Any special handling, delays, or conditions to report..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button class="btn btn-primary" id="submit-btn" onclick="submitRegistration()">
+              Submit Registration →
+            </button>
+            <div style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:10px">
+              You will receive a push notification when your registration is reviewed
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
 
-    <script>
-        function moveButton() {
-            const noBtn = document.getElementById('noBtn');
-            const container = document.querySelector('.button-container');
-            
-            // Get container dimensions
-            const containerRect = container.getBoundingClientRect();
-            
-            // Calculate random position within a reasonable range
-            const maxX = 150;
-            const maxY = 100;
-            
-            const randomX = (Math.random() - 0.5) * maxX;
-            const randomY = (Math.random() - 0.5) * maxY;
-            
-            // Apply the new position
-            noBtn.style.left = randomX + 'px';
-            noBtn.style.top = randomY + 'px';
-        }
+    <!-- ── NOTIFICATIONS ── -->
+    <div id="view-notifications" class="view">
+      <div style="padding:16px">
+        <div class="section-label">Recent Notifications</div>
+        <div class="notif-item">
+          <div class="ni-icon">✅</div>
+          <div>
+            <div class="ni-title">Registration #A1B2C3D4 Approved</div>
+            <div class="ni-meta">You may proceed to the lab · 2h ago</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="ni-icon">🔬</div>
+          <div>
+            <div class="ni-title">Lab analysis complete — Passed</div>
+            <div class="ni-meta">SAP document posted: 4900012241 · 2h ago</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="ni-icon">⏳</div>
+          <div>
+            <div class="ni-title">Registration #F5E6D7C8 received</div>
+            <div class="ni-meta">Under review by supervisor · 5h ago</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:14px 16px;background:var(--primary-lt);border-radius:var(--radius);border:1px solid rgba(42,92,63,0.2);font-size:13px;color:var(--primary-dk)">
+          🔔 <strong>Push notifications enabled.</strong> You'll get real-time alerts when your registration status changes — even when the app is closed.
+        </div>
+      </div>
+    </div>
 
-        function celebrate() {
-            const celebration = document.getElementById('celebration');
-            celebration.classList.add('show');
-            
-            // Create confetti
-            for (let i = 0; i < 100; i++) {
-                setTimeout(() => createConfetti(), i * 30);
-            }
-        }
+    <!-- ── PROFILE ── -->
+    <div id="view-profile" class="view">
+      <div class="profile-hero">
+        <div class="profile-avatar" id="user-avatar-big">?</div>
+        <div class="profile-name" id="user-name-big">Loading...</div>
+        <div class="profile-email" id="user-email">—</div>
+      </div>
 
-        function createConfetti() {
-            const confetti = document.createElement('div');
-            confetti.classList.add('confetti');
-            confetti.style.left = Math.random() * 100 + 'vw';
-            confetti.style.background = getRandomColor();
-            confetti.style.animationDelay = Math.random() * 3 + 's';
-            document.body.appendChild(confetti);
-            
-            setTimeout(() => confetti.remove(), 3000);
-        }
+      <div class="profile-menu">
+        <div class="profile-item">
+          <div class="pi-icon">🏭</div>
+          <div>
+            <div class="pi-label">Farm Profile</div>
+            <div class="pi-sub">Update farm details & license</div>
+          </div>
+          <div class="pi-arrow">›</div>
+        </div>
+        <div class="profile-item">
+          <div class="pi-icon">🔔</div>
+          <div>
+            <div class="pi-label">Notification Settings</div>
+            <div class="pi-sub">Push alerts for approvals</div>
+          </div>
+          <div class="pi-arrow">›</div>
+        </div>
+        <div class="profile-item">
+          <div class="pi-icon">🔒</div>
+          <div>
+            <div class="pi-label">Change Password</div>
+            <div class="pi-sub">Update your login credentials</div>
+          </div>
+          <div class="pi-arrow">›</div>
+        </div>
+        <div class="profile-item">
+          <div class="pi-icon">📊</div>
+          <div>
+            <div class="pi-label">My History</div>
+            <div class="pi-sub">All past registrations & SAP records</div>
+          </div>
+          <div class="pi-arrow">›</div>
+        </div>
+      </div>
 
-        function getRandomColor() {
-            const colors = ['#ff6b9d', '#c06c84', '#f67280', '#fff', '#ffeb3b', '#ff1744'];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
+      <button class="logout-btn" onclick="handleLogout()">🚪 Sign Out</button>
+    </div>
 
-        // Position the No button initially
-        window.addEventListener('load', () => {
-            const noBtn = document.getElementById('noBtn');
-            noBtn.style.left = '0px';
-            noBtn.style.top = '0px';
-        });
-    </script>
+  </div><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-view="my-registrations" onclick="showView('my-registrations')">
+      <span class="nav-icon">📋</span>
+      <span>My Regs</span>
+    </button>
+    <button class="nav-item" data-view="new-reg" onclick="showView('new-reg')">
+      <span class="nav-icon">➕</span>
+      <span>New Reg</span>
+    </button>
+    <button class="nav-item" data-view="notifications" onclick="showView('notifications')">
+      <span class="nav-icon">🔔</span>
+      <span>Alerts</span>
+      <span class="nav-dot" id="nav-notif-dot"></span>
+    </button>
+    <button class="nav-item" data-view="profile" onclick="showView('profile')">
+      <span class="nav-icon">👤</span>
+      <span>Profile</span>
+    </button>
+  </nav>
+
+</div><!-- /app-screen -->
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- ── FIREBASE INIT + APP LOGIC ── -->
+<script>
+// ── Firebase Config — REPLACE WITH YOUR OWN ──────────
+const firebaseConfig = {
+  apiKey: "AIzaSyDVWT2482mQTj8whjTWRLDAzY9Oa9mnw_E",
+  authDomain: "farmsmilk.firebaseapp.com",
+  projectId: "farmsmilk",
+  storageBucket: "farmsmilk.firebasestorage.app",
+  messagingSenderId: "175276296664",
+  appId: "1:175276296664:web:e4ba8302824164f9484aad",
+  measurementId: "G-40HNB89JQZ"
+};
+const VAPID_KEY = "BHMV4mWiy11O_HG51y2iOkieJkYPi0jrLxI106vZ17XYNN1biVQXkeWYEdhfpi2HcutLO3SQPQkMO1u3nKXOY9o"; // Firebase Console → Project Settings → Cloud Messaging
+
+// ── Init ─────────────────────────────────────────────
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+let messaging = null;
+try { messaging = firebase.messaging(); } catch(e) {}
+
+let currentUser = null;
+let unsubscribe = null;
+
+// ── Auth State ────────────────────────────────────────
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    showApp(user);
+    loadRegistrations();
+    initPush();
+  } else {
+    currentUser = null;
+    if (unsubscribe) unsubscribe();
+    showAuthScreen();
+  }
+});
+
+// ── AUTH ─────────────────────────────────────────────
+window.handleLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd   = document.getElementById('login-password').value;
+  if (!email || !pwd) { toast('Please enter email and password', 'error'); return; }
+  setBtnLoading(true);
+  try {
+    await auth.signInWithEmailAndPassword(email, pwd);
+  } catch(e) { toast(fbErr(e.code), 'error'); setBtnLoading(false); }
+};
+
+window.handleRegister = async function() {
+  const name   = document.getElementById('reg-name').value.trim();
+  const farmId = document.getElementById('reg-farmid').value.trim();
+  const email  = document.getElementById('reg-email').value.trim();
+  const pwd    = document.getElementById('reg-password').value;
+  if (!name||!farmId||!email||!pwd) { toast('Fill in all fields', 'error'); return; }
+  if (pwd.length < 6) { toast('Password needs 6+ characters', 'error'); return; }
+  setBtnLoading(true);
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pwd);
+    await cred.user.updateProfile({ displayName: name });
+    await db.collection('farms').add({ uid: cred.user.uid, name, farmId, email, createdAt: firebase.firestore.FieldValue.serverTimestamp(), status: 'active' });
+    toast('Welcome to MilkTrack! 🥛', 'success');
+  } catch(e) { toast(fbErr(e.code), 'error'); setBtnLoading(false); }
+};
+
+window.handleLogout = async function() {
+  await auth.signOut();
+  toast('Signed out', 'info');
+};
+
+// ── SUBMIT REGISTRATION ───────────────────────────────
+window.submitRegistration = async function() {
+  const plate   = v('f-plate');
+  const driver  = v('f-driver');
+  const qty     = parseFloat(v('f-qty'));
+  const type    = v('f-type');
+  const temp    = parseFloat(v('f-temp')) || null;
+  const arrival = v('f-arrival');
+  const notes   = v('f-notes');
+
+  if (!plate||!driver||!qty||!arrival) { toast('Fill in required fields (*)', 'error'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+
+  try {
+    const farmSnap = await db.collection('farms').where('uid','==',currentUser.uid).get();
+    const farm = farmSnap.empty ? {} : farmSnap.docs[0].data();
+
+    const ref = await db.collection('registrations').add({
+      uid:         currentUser.uid,
+      farmName:    farm.name  || currentUser.displayName || 'Unknown',
+      farmId:      farm.farmId || 'N/A',
+      email:       currentUser.email,
+      carPlate:    plate,
+      driver,
+      quantity:    qty,
+      milkType:    type,
+      temperature: temp,
+      arrivalTime: arrival,
+      notes,
+      status:      'pending',
+      labResult:   null,
+      sapDocId:    null,
+      rejectionReason: null,
+      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    toast('✅ Submitted! ID: ' + ref.id.substring(0,8).toUpperCase(), 'success');
+    document.getElementById('reg-form').reset();
+    showView('my-registrations');
+  } catch(e) {
+    console.error(e);
+    toast('Submit failed. Check connection.', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit Registration →';
+  }
+};
+
+// ── REAL-TIME REGISTRATIONS ───────────────────────────
+function loadRegistrations() {
+  if (unsubscribe) unsubscribe();
+  const q = db.collection('registrations')
+    .where('uid','==', currentUser.uid)
+    .orderBy('createdAt','desc');
+
+  unsubscribe = q.onSnapshot(snap => {
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderList(list);
+    updateStats(list);
+
+    snap.docChanges().forEach(ch => {
+      if (ch.type === 'modified') {
+        const d = ch.doc.data();
+        const id = ch.doc.id.substring(0,8).toUpperCase();
+        if (d.status === 'approved') {
+          toast('✅ #' + id + ' APPROVED — Come to the lab!', 'success');
+          beep(880); showDot();
+        }
+        if (d.status === 'rejected') {
+          toast('❌ #' + id + ' Rejected: ' + (d.rejectionReason||'Contact supervisor'), 'error');
+          beep(220); showDot();
+        }
+      }
+    });
+  });
+}
+
+function renderList(list) {
+  const el = document.getElementById('registrations-list');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🚛</div><div class="empty-title">No registrations yet</div><div class="empty-sub">Submit your first milk car registration to get started</div><button class="btn btn-primary" onclick="showView('new-reg')">+ New Registration</button></div>`;
+    return;
+  }
+  el.innerHTML = list.map(r => {
+    const dt = r.createdAt?.toDate ? r.createdAt.toDate() : new Date();
+    const ds = dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const ts = dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    const sc = {pending:'badge-pending',approved:'badge-approved',rejected:'badge-rejected'}[r.status]||'badge-pending';
+    const si = {pending:'⏳',approved:'✅',rejected:'❌'}[r.status]||'⏳';
+    return `
+    <div class="reg-card ${r.status}">
+      <div class="reg-card-header">
+        <span class="mono" style="font-size:12px;color:var(--text-muted)">#${r.id.substring(0,8).toUpperCase()}</span>
+        <span class="badge ${sc}">${si} ${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span>
+      </div>
+      <div class="reg-info-grid">
+        <div class="reg-info-item"><div class="ri-label">Car Plate</div><div class="ri-value">${r.carPlate}</div></div>
+        <div class="reg-info-item"><div class="ri-label">Quantity</div><div class="ri-value">${r.quantity}t</div></div>
+        <div class="reg-info-item"><div class="ri-label">Type</div><div class="ri-value">${r.milkType}</div></div>
+        <div class="reg-info-item"><div class="ri-label">Submitted</div><div class="ri-value" style="font-size:12px">${ds} ${ts}</div></div>
+      </div>
+      ${r.status==='approved'?`<div class="lab-result-banner approved">✅ Approved — Proceed to the lab${r.sapDocId?`<span class="sap-chip">SAP: ${r.sapDocId}</span>`:''}</div>`:''}
+      ${r.status==='rejected'?`<div class="lab-result-banner rejected">❌ ${r.rejectionReason||'Contact your supervisor'}</div>`:''}
+      ${r.labResult?`<div class="lab-details"><span>🔬 Fat: ${r.labResult.fat}%</span><span>Protein: ${r.labResult.protein}%</span><span>Bacteria: ${r.labResult.bacteria}</span><span>pH: ${r.labResult.ph}</span></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function updateStats(list) {
+  setText('stat-total',    list.length);
+  setText('stat-pending',  list.filter(r=>r.status==='pending').length);
+  setText('stat-approved', list.filter(r=>r.status==='approved').length);
+  const tons = list.filter(r=>r.status==='approved').reduce((s,r)=>s+(r.quantity||0),0);
+  setText('stat-tons',     tons.toFixed(1)+'t');
+  const pending = list.filter(r=>r.status==='pending').length;
+  const badge = document.getElementById('pending-badge');
+  if (badge) { badge.textContent = pending||''; badge.style.display = pending?'inline':'none'; }
+}
+
+// ── PUSH NOTIFICATIONS ────────────────────────────────
+async function initPush() {
+  if (!messaging) return;
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    const token = await messaging.getToken({ vapidKey: VAPID_KEY });
+    if (token) {
+      const fs = await db.collection('farms').where('uid','==',currentUser.uid).get();
+      if (!fs.empty) await db.collection('farms').doc(fs.docs[0].id).update({ fcmToken: token });
+    }
+    messaging.onMessage(p => {
+      const n = p.notification||{};
+      toast('🔔 ' + (n.title||'') + ': ' + (n.body||''), 'info');
+      beep(660); showDot();
+    });
+  } catch(e) { console.warn('Push setup:', e.message); }
+}
+
+// ── UI HELPERS ────────────────────────────────────────
+window.showView = function(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el = document.getElementById('view-'+name);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===name));
+  const titles = {'new-reg':'New Registration','my-registrations':'My Registrations','profile':'My Profile','notifications':'Notifications'};
+  setText('page-title', titles[name]||'MilkTrack');
+  // Sync profile view
+  if (name==='profile') {
+    setText('user-name-big',    currentUser?.displayName||'');
+    setText('user-avatar-big',  (currentUser?.displayName||'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase());
+    setText('user-email',       currentUser?.email||'');
+  }
+};
+
+window.switchAuthTab = function(tab) {
+  document.getElementById('auth-login').style.display    = tab==='login'    ? 'block' : 'none';
+  document.getElementById('auth-register').style.display = tab==='register' ? 'block' : 'none';
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+};
+
+window.togglePassword = function(id) {
+  const i = document.getElementById(id);
+  i.type = i.type==='password' ? 'text' : 'password';
+};
+
+function showApp(user) {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display  = 'flex';
+  const initials = (user.displayName||'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  setText('user-initials', initials);
+  setText('user-name', user.displayName||user.email.split('@')[0]);
+  showView('my-registrations');
+}
+
+function showAuthScreen() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display  = 'none';
+}
+
+let toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast toast-${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 4000);
+}
+
+function setText(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+function v(id) { const e=document.getElementById(id); return e ? e.value.trim() : ''; }
+
+function setBtnLoading(l) {
+  document.querySelectorAll('.auth-btn').forEach(b=>{ b.disabled=l; if(!l) b.textContent=b.dataset.label; else b.textContent='Please wait...'; });
+}
+
+function beep(freq=880) {
+  try {
+    const ctx=new AudioContext(), osc=ctx.createOscillator(), g=ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.frequency.value=freq; g.gain.setValueAtTime(0.08,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.3);
+    osc.start(); osc.stop(ctx.currentTime+0.3);
+  } catch(e){}
+}
+
+function showDot() {
+  const d = document.getElementById('nav-notif-dot');
+  if (d) d.style.display='block';
+}
+
+function fbErr(code) {
+  const m={'auth/email-already-in-use':'Email already registered.','auth/invalid-email':'Invalid email.','auth/weak-password':'Password too weak.','auth/user-not-found':'No account with this email.','auth/wrong-password':'Wrong password.','auth/too-many-requests':'Too many attempts. Wait and retry.','auth/network-request-failed':'Network error.'};
+  return m[code]||'Error: '+code;
+}
+
+// ── SERVICE WORKER ────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(r => console.log('SW registered'))
+    .catch(e => console.warn('SW failed:', e));
+}
+</script>
 </body>
 </html>

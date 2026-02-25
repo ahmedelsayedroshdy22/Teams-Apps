@@ -1,0 +1,32 @@
+{
+  "name": "MilkTrack — Farm Portal",
+  "short_name": "MilkTrack",
+  "description": "Register milk cars, track lab approvals and SAP records",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2A5C3F",
+  "theme_color": "#2A5C3F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "screenshots": [
+    {
+      "src": "img/screenshot1.png",
+      "sizes": "390x844",
+      "type": "image/png"
+    }
+  ]
+}

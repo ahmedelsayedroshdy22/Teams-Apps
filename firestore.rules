@@ -1,0 +1,43 @@
+// firestore.rules
+// Deploy with: firebase deploy --only firestore:rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── FARMS collection ──────────────────────────────────
+    // Only the farm owner can read/write their own profile
+    match /farms/{farmDoc} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.uid;
+
+      // Allow creating a new farm profile (registration)
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid;
+    }
+
+    // ── REGISTRATIONS collection ──────────────────────────
+    match /registrations/{regDoc} {
+      // Farm can read their own registrations
+      allow read: if request.auth != null
+        && request.auth.uid == resource.data.uid;
+
+      // Farm can CREATE registrations (set uid to their own)
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending';
+
+      // Farm cannot UPDATE (only lab/admin can change status)
+      // Lab/Admin users should use Admin SDK on backend
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ── NOTIFICATIONS collection (optional) ──────────────
+    match /notifications/{notifDoc} {
+      allow read: if request.auth != null
+        && request.auth.uid == resource.data.uid;
+      allow write: if false; // Written by backend only
+    }
+  }
+}
