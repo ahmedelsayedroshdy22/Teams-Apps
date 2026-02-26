@@ -5,35 +5,1130 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MilkTrack — Farm Portal</title>
   <meta name="description" content="Register milk cars, track lab approvals and SAP records">
-  <meta name="theme-color" content="#2A5C3F">
-
-  <!-- PWA Meta -->
+  <meta name="theme-color" content="#1a3a2a">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MilkTrack">
-  <link rel="apple-touch-icon" href="img/icon-192.png">
-  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/style.css">
-
-  <!-- Firebase SDKs (using CDN compat versions for simplicity) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js"></script>
+
+<style>
+/* ════════════════════════════════════════════
+   TOKENS
+════════════════════════════════════════════ */
+:root {
+  --forest:    #1a3a2a;
+  --forest-md: #2a5c3f;
+  --forest-lt: #3d7a55;
+  --sage:      #7aab8a;
+  --sage-lt:   #b5d4bf;
+  --cream:     #f8f4ec;
+  --cream-dk:  #ede7d9;
+  --warm:      #d4c49a;
+  --gold:      #c8953a;
+  --gold-lt:   #f5c97a;
+  --red:       #c0392b;
+  --red-lt:    #fdecea;
+  --ink:       #1c2b22;
+  --text:      #2e4437;
+  --muted:     #7a9085;
+  --border:    rgba(42,92,63,0.15);
+  --shadow:    0 4px 24px rgba(26,58,42,0.10);
+  --shadow-lg: 0 12px 48px rgba(26,58,42,0.16);
+  --radius:    14px;
+  --radius-lg: 20px;
+  --radius-sm: 8px;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+/* ════════════════════════════════════════════
+   RESET & BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  outline: none;
+}
+
+/* ════════════════════════════════════════════
+   AUTH SCREEN
+════════════════════════════════════════════ */
+#auth-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--forest);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(122,171,138,0.25) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+#auth-screen::before {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(122,171,138,0.12) 0%, transparent 70%);
+  top: -150px; right: -150px;
+  pointer-events: none;
+}
+
+.auth-card {
+  background: var(--cream);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.08);
+  animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.auth-hero {
+  background: var(--forest);
+  background-image: linear-gradient(135deg, var(--forest) 0%, var(--forest-md) 100%);
+  padding: 36px 32px 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 30px;
+  background: var(--cream);
+  border-radius: 30px 30px 0 0;
+}
+
+.auth-logo-wrap {
+  width: 64px; height: 64px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  margin: 0 auto 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.auth-brand {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.auth-tagline {
+  font-size: 13px;
+  color: var(--sage-lt);
+  margin-top: 4px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  margin: 24px 0 0;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  color: var(--muted);
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.auth-tab.active {
+  background: var(--forest);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(26,58,42,0.25);
+}
+
+.auth-body {
+  padding: 20px 24px 28px;
+}
+
+.auth-form-group {
+  margin-bottom: 16px;
+}
+
+.auth-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+
+.auth-input-wrap {
+  position: relative;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-input:focus {
+  border-color: var(--forest-md);
+  box-shadow: 0 0 0 3px rgba(42,92,63,0.1);
+}
+
+.auth-input::placeholder { color: #b0bfb8; }
+
+.pw-toggle {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  cursor: pointer; font-size: 16px;
+  opacity: 0.5; transition: opacity 0.2s;
+  padding: 4px;
+}
+.pw-toggle:hover { opacity: 0.9; }
+
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--forest);
+  background-image: linear-gradient(135deg, var(--forest) 0%, var(--forest-md) 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.2s;
+}
+
+.auth-btn:hover::after { background: rgba(255,255,255,0.07); }
+.auth-btn:active { transform: scale(0.99); }
+.auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.auth-divider {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 16px 0;
+}
+
+.auth-link {
+  color: var(--forest-md);
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth-link:hover { text-decoration: underline; }
+
+/* ════════════════════════════════════════════
+   APP SCREEN
+════════════════════════════════════════════ */
+#app-screen {
+  display: none;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--cream);
+}
+
+/* TOP BAR */
+.topbar {
+  background: var(--forest);
+  background-image: linear-gradient(135deg, var(--forest) 0%, #223d30 100%);
+  padding: 0 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(26,58,42,0.3);
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.topbar-logo-icon {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  transition: background 0.2s;
+}
+.topbar-btn:hover { background: rgba(255,255,255,0.18); }
+
+#pending-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--gold);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: none;
+  align-items: center; justify-content: center;
+  border: 2px solid var(--forest);
+}
+
+.topbar-avatar {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--sage) 0%, var(--forest-lt) 100%);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  letter-spacing: 0.5px;
+}
+
+/* PAGE HEADER */
+.page-header {
+  background: var(--forest);
+  padding: 0 20px 20px;
+  position: relative;
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 0; right: 0;
+  height: 20px;
+  background: var(--cream);
+  border-radius: 20px 20px 0 0;
+}
+
+#page-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: #fff;
+  font-weight: 600;
+  display: block;
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 24px 16px 100px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* VIEWS */
+.view { display: none; animation: fadeIn 0.3s ease; }
+.view.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   WELCOME BANNER
+════════════════════════════════════════════ */
+.welcome-banner {
+  background: linear-gradient(135deg, var(--forest) 0%, var(--forest-md) 60%, var(--forest-lt) 100%);
+  border-radius: var(--radius-lg);
+  padding: 24px 24px 22px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-banner::before {
+  content: '🥛';
+  position: absolute;
+  right: 20px; bottom: -8px;
+  font-size: 72px;
+  opacity: 0.12;
+  transform: rotate(-10deg);
+  pointer-events: none;
+}
+
+.wb-greeting {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--sage-lt);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.wb-name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.wb-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 300;
+}
+
+/* ════════════════════════════════════════════
+   STATS STRIP
+════════════════════════════════════════════ */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.stat-chip {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 2px 8px rgba(26,58,42,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-chip:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,58,42,0.10); }
+
+.stat-chip-val {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-chip-val.blue  { color: #2471a3; }
+.stat-chip-val.gold  { color: var(--gold); }
+.stat-chip-val.green { color: var(--forest-md); }
+
+.stat-chip-lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ════════════════════════════════════════════
+   SECTION LABEL
+════════════════════════════════════════════ */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  padding-left: 2px;
+}
+
+/* ════════════════════════════════════════════
+   REG CARDS
+════════════════════════════════════════════ */
+.reg-card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(26,58,42,0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.reg-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+.reg-card.approved { border-color: rgba(42,92,63,0.3); }
+.reg-card.rejected { border-color: rgba(192,57,43,0.25); }
+
+.reg-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--cream-dk);
+}
+
+.reg-card-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--cream);
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.badge-pending  { background: #fef9ee; color: #b07d20; border: 1px solid #f0d98a; }
+.badge-approved { background: #edfaf3; color: #1e6b44; border: 1px solid #9de0be; }
+.badge-rejected { background: var(--red-lt); color: var(--red); border: 1px solid #f5b8b3; }
+
+.reg-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 4px 16px 14px;
+}
+
+.reg-info-item { padding: 8px 0; }
+
+.ri-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.ri-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.lab-result-banner {
+  padding: 11px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lab-result-banner.approved {
+  background: linear-gradient(135deg, #edfaf3 0%, #d6f5e8 100%);
+  color: #1e6b44;
+  border-top: 1px solid #9de0be;
+}
+
+.lab-result-banner.rejected {
+  background: var(--red-lt);
+  color: var(--red);
+  border-top: 1px solid #f5b8b3;
+}
+
+.sap-chip {
+  background: rgba(42,92,63,0.1);
+  border: 1px solid rgba(42,92,63,0.2);
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--forest-md);
+  margin-left: auto;
+}
+
+.lab-details {
+  display: flex;
+  gap: 12px;
+  padding: 10px 16px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--cream);
+  flex-wrap: wrap;
+  border-top: 1px solid var(--cream-dk);
+}
+
+.lab-details span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+}
+
+/* ════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════ */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px dashed var(--border);
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.8; }
+.empty-title { font-family: var(--font-display); font-size: 18px; color: var(--text); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+/* ════════════════════════════════════════════
+   FORM
+════════════════════════════════════════════ */
+.form-container { max-width: 600px; }
+
+.form-card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(26,58,42,0.04);
+}
+
+.form-section {
+  padding: 16px 20px;
+}
+
+.form-section + .form-section {
+  border-top: 1px solid var(--cream-dk);
+}
+
+.form-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--forest-md);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-group { margin-bottom: 12px; }
+.form-group:last-child { margin-bottom: 0; }
+
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.required-star { color: var(--gold); }
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--ink);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--forest-md);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(42,92,63,0.1);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder { color: #c0cec8; }
+
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%237a9085' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 88px;
+  line-height: 1.5;
+}
+
+.form-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.form-footer {
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--cream-dk);
+  background: var(--cream);
+}
+
+/* STATUS FLOW */
+.status-flow {
+  display: flex;
+  align-items: center;
+}
+
+.sf-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sf-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--cream-dk);
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  transition: all 0.3s;
+}
+
+.sf-dot.current {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(42,92,63,0.15);
+}
+
+.sf-dot.done {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: #fff;
+}
+
+.sf-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sf-line {
+  flex: 1;
+  height: 2px;
+  background: var(--cream-dk);
+  margin: 0 4px;
+  margin-bottom: 18px;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  letter-spacing: 0.2px;
+}
+
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--forest) 0%, var(--forest-md) 100%);
+  color: #fff;
+  width: 100%;
+  font-size: 15px;
+  padding: 14px;
+  box-shadow: 0 4px 16px rgba(42,92,63,0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 24px rgba(42,92,63,0.4);
+  transform: translateY(-1px);
+}
+
+/* ════════════════════════════════════════════
+   NOTIFICATIONS
+════════════════════════════════════════════ */
+.notif-list { display: flex; flex-direction: column; gap: 10px; }
+
+.notif-item {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(26,58,42,0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.notif-item:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+.ni-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ni-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.ni-meta  { font-size: 12px; color: var(--muted); }
+
+.notif-push-banner {
+  background: linear-gradient(135deg, #edfaf3 0%, #d6f5e8 100%);
+  border: 1.5px solid rgba(42,92,63,0.2);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--forest-md);
+  margin-top: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* ════════════════════════════════════════════
+   PROFILE
+════════════════════════════════════════════ */
+.profile-hero {
+  background: linear-gradient(135deg, var(--forest) 0%, var(--forest-md) 100%);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px 26px;
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  top: -80px; right: -60px;
+  pointer-events: none;
+}
+
+.profile-avatar {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, var(--sage) 0%, var(--forest-lt) 100%);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 auto 12px;
+  border: 2.5px solid rgba(255,255,255,0.25);
+  letter-spacing: 1px;
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.profile-email {
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+}
+
+.profile-menu {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(26,58,42,0.04);
+}
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--cream-dk);
+}
+.profile-item:last-child { border-bottom: none; }
+.profile-item:hover { background: var(--cream); }
+
+.pi-icon {
+  width: 38px; height: 38px;
+  background: var(--cream);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.pi-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+.pi-sub   { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.pi-arrow { margin-left: auto; font-size: 20px; color: var(--muted); }
+
+.logout-btn {
+  width: 100%;
+  padding: 13px;
+  background: #fff;
+  border: 1.5px solid rgba(192,57,43,0.2);
+  border-radius: var(--radius-sm);
+  color: var(--red);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.logout-btn:hover {
+  background: var(--red-lt);
+  border-color: rgba(192,57,43,0.35);
+}
+
+/* ════════════════════════════════════════════
+   BOTTOM NAV
+════════════════════════════════════════════ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(248,244,236,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(42,92,63,0.1);
+  display: flex;
+  z-index: 90;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+}
+
+.nav-item {
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  position: relative;
+  transition: color 0.2s;
+  font-family: var(--font-body);
+}
+
+.nav-item.active { color: var(--forest-md); }
+
+.nav-icon { font-size: 22px; line-height: 1; }
+
+.nav-item.active .nav-icon {
+  filter: drop-shadow(0 2px 4px rgba(42,92,63,0.25));
+}
+
+.nav-dot {
+  position: absolute;
+  top: 4px; right: calc(50% - 18px);
+  width: 7px; height: 7px;
+  background: var(--gold);
+  border-radius: 50%;
+  border: 1.5px solid var(--cream);
+  display: none;
+}
+
+/* Active indicator bar */
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--forest-md);
+  border-radius: 0 0 3px 3px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.nav-item.active::before { opacity: 1; }
+
+/* ════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: #fff;
+  padding: 11px 20px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  max-width: calc(100vw - 40px);
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.toast-success { background: linear-gradient(135deg, #1e6b44 0%, var(--forest-md) 100%); }
+.toast.toast-error   { background: linear-gradient(135deg, #a93226 0%, #c0392b 100%); }
+.toast.toast-info    { background: linear-gradient(135deg, #1a5276 0%, #2471a3 100%); }
+
+/* ════════════════════════════════════════════
+   LOADING SKELETON
+════════════════════════════════════════════ */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--cream-dk) 25%, #f0ece2 50%, var(--cream-dk) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+/* ════════════════════════════════════════════
+   SCROLLBAR
+════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--sage-lt); border-radius: 4px; }
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 380px) {
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .form-row { grid-template-columns: 1fr; }
+  .stat-chip-val { font-size: 18px; }
+}
+
+@media (min-width: 640px) {
+  .content { padding: 28px 24px 100px; }
+}
+</style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════
+<!-- ════════════════════════════════════════
      AUTH SCREEN
-═══════════════════════════════════════════ -->
+════════════════════════════════════════ -->
 <div id="auth-screen">
   <div class="auth-card">
-    <div class="auth-header">
-      <div class="auth-logo">🥛</div>
-      <div class="auth-title">MilkTrack</div>
-      <div class="auth-subtitle">Farm Registration Portal</div>
+    <div class="auth-hero">
+      <div class="auth-logo-wrap">🥛</div>
+      <div class="auth-brand">MilkTrack</div>
+      <div class="auth-tagline">Farm Registration Portal</div>
     </div>
 
     <div class="auth-tabs">
@@ -50,13 +1145,15 @@
       <div class="auth-form-group">
         <label class="auth-label">Password</label>
         <div class="auth-input-wrap">
-          <input class="auth-input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')handleLogin()">
+          <input class="auth-input" id="login-password" type="password" placeholder="Your password" autocomplete="current-password" style="padding-right:44px" onkeydown="if(event.key==='Enter')handleLogin()">
           <button class="pw-toggle" onclick="togglePassword('login-password')">👁</button>
         </div>
       </div>
       <button class="auth-btn" data-label="Sign In" onclick="handleLogin()">Sign In →</button>
       <div class="auth-divider">— or —</div>
-      <div style="text-align:center;font-size:13px;color:var(--text-muted)">No account? <a href="#" style="color:var(--primary);font-weight:600;text-decoration:none" onclick="switchAuthTab('register')">Register your farm</a></div>
+      <div style="text-align:center;font-size:13px;color:var(--muted)">
+        No account? <a href="#" class="auth-link" onclick="switchAuthTab('register')">Register your farm</a>
+      </div>
     </div>
 
     <!-- REGISTER -->
@@ -76,7 +1173,7 @@
       <div class="auth-form-group">
         <label class="auth-label">Password</label>
         <div class="auth-input-wrap">
-          <input class="auth-input" id="reg-password" type="password" placeholder="Min 6 characters" autocomplete="new-password">
+          <input class="auth-input" id="reg-password" type="password" placeholder="Min 6 characters" autocomplete="new-password" style="padding-right:44px">
           <button class="pw-toggle" onclick="togglePassword('reg-password')">👁</button>
         </div>
       </div>
@@ -85,14 +1182,17 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
+<!-- ════════════════════════════════════════
      APP SCREEN
-═══════════════════════════════════════════ -->
+════════════════════════════════════════ -->
 <div id="app-screen" style="display:none;flex-direction:column;min-height:100vh">
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div class="topbar-logo">🥛 <span>MilkTrack</span></div>
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">🥛</div>
+      MilkTrack
+    </div>
     <div class="topbar-right">
       <button class="topbar-btn" onclick="showView('notifications')" title="Notifications">
         🔔
@@ -110,16 +1210,14 @@
   <!-- CONTENT -->
   <div class="content">
 
-    <!-- ── MY REGISTRATIONS ── -->
+    <!-- MY REGISTRATIONS -->
     <div id="view-my-registrations" class="view active">
-      <!-- Welcome strip -->
       <div class="welcome-banner">
         <div class="wb-greeting">Good day,</div>
         <div class="wb-name" id="user-name">Loading...</div>
         <div class="wb-sub">Here are your milk car submissions</div>
       </div>
 
-      <!-- Stats -->
       <div class="stats-strip">
         <div class="stat-chip">
           <div class="stat-chip-val blue" id="stat-total">—</div>
@@ -139,26 +1237,21 @@
         </div>
       </div>
 
-      <!-- Registration list -->
-      <div class="registrations-container">
-        <div class="section-label">Your Submissions</div>
-        <div id="registrations-list">
-          <!-- Populated by JS -->
-          <div class="empty-state">
-            <div style="font-size:32px;margin-bottom:8px">⏳</div>
-            <div style="color:var(--text-muted)">Loading...</div>
-          </div>
+      <div class="section-label">Your Submissions</div>
+      <div id="registrations-list">
+        <div class="empty-state">
+          <div style="font-size:32px;margin-bottom:8px">⏳</div>
+          <div style="color:var(--muted)">Loading...</div>
         </div>
       </div>
     </div>
 
-    <!-- ── NEW REGISTRATION ── -->
+    <!-- NEW REGISTRATION -->
     <div id="view-new-reg" class="view">
       <div class="form-container">
 
-        <!-- Status flow indicator -->
-        <div class="form-card" style="margin-bottom:14px;padding:14px 16px">
-          <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Registration Process</div>
+        <div class="form-card" style="padding:18px 20px">
+          <div class="section-label" style="margin-bottom:12px">Registration Process</div>
           <div class="status-flow">
             <div class="sf-step">
               <div class="sf-dot current">1</div>
@@ -172,23 +1265,22 @@
             <div class="sf-line"></div>
             <div class="sf-step">
               <div class="sf-dot">3</div>
-              <div class="sf-label">Come to Lab</div>
+              <div class="sf-label">Lab Visit</div>
             </div>
             <div class="sf-line"></div>
             <div class="sf-step">
               <div class="sf-dot">4</div>
-              <div class="sf-label">Lab Analysis</div>
+              <div class="sf-label">Analysis</div>
             </div>
             <div class="sf-line"></div>
             <div class="sf-step">
               <div class="sf-dot">5</div>
-              <div class="sf-label">SAP Record</div>
+              <div class="sf-label">SAP</div>
             </div>
           </div>
         </div>
 
         <form id="reg-form" onsubmit="return false" class="form-card">
-          <!-- Vehicle Info -->
           <div class="form-section">
             <div class="form-section-title">🚛 Vehicle Information</div>
             <div class="form-row">
@@ -203,8 +1295,7 @@
             </div>
           </div>
 
-          <!-- Milk Info -->
-          <div class="form-section" style="margin-top:4px">
+          <div class="form-section">
             <div class="form-section-title">🥛 Milk Details</div>
             <div class="form-row">
               <div class="form-group">
@@ -224,7 +1315,7 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Temperature on Departure (°C)</label>
+                <label class="form-label">Temperature (°C)</label>
                 <input class="form-input" id="f-temp" type="number" step="0.1" placeholder="4.0">
                 <div class="form-hint">Must be ≤ 6°C</div>
               </div>
@@ -235,8 +1326,7 @@
             </div>
           </div>
 
-          <!-- Notes -->
-          <div class="form-section" style="margin-top:4px;padding-bottom:4px">
+          <div class="form-section">
             <div class="form-section-title">📝 Additional Notes</div>
             <div class="form-group">
               <textarea class="form-textarea" id="f-notes" placeholder="Any special handling, delays, or conditions to report..."></textarea>
@@ -247,18 +1337,18 @@
             <button class="btn btn-primary" id="submit-btn" onclick="submitRegistration()">
               Submit Registration →
             </button>
-            <div style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:10px">
-              You will receive a push notification when your registration is reviewed
+            <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:10px">
+              You will be notified when your registration is reviewed
             </div>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- ── NOTIFICATIONS ── -->
+    <!-- NOTIFICATIONS -->
     <div id="view-notifications" class="view">
-      <div style="padding:16px">
-        <div class="section-label">Recent Notifications</div>
+      <div class="section-label" style="margin-bottom:12px">Recent Notifications</div>
+      <div class="notif-list">
         <div class="notif-item">
           <div class="ni-icon">✅</div>
           <div>
@@ -280,13 +1370,17 @@
             <div class="ni-meta">Under review by supervisor · 5h ago</div>
           </div>
         </div>
-        <div style="margin-top:16px;padding:14px 16px;background:var(--primary-lt);border-radius:var(--radius);border:1px solid rgba(42,92,63,0.2);font-size:13px;color:var(--primary-dk)">
-          🔔 <strong>Push notifications enabled.</strong> You'll get real-time alerts when your registration status changes — even when the app is closed.
+      </div>
+      <div class="notif-push-banner" style="margin-top:12px">
+        <span style="font-size:20px">🔔</span>
+        <div>
+          <div style="font-weight:600;margin-bottom:2px">Push notifications enabled</div>
+          <div style="opacity:0.7;font-size:12px">Real-time alerts when your registration status changes — even when the app is closed.</div>
         </div>
       </div>
     </div>
 
-    <!-- ── PROFILE ── -->
+    <!-- PROFILE -->
     <div id="view-profile" class="view">
       <div class="profile-hero">
         <div class="profile-avatar" id="user-avatar-big">?</div>
@@ -360,9 +1454,8 @@
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
 
-<!-- ── FIREBASE INIT + APP LOGIC ── -->
+<!-- FIREBASE + APP LOGIC -->
 <script>
-// ── Firebase Config — REPLACE WITH YOUR OWN ──────────
 const firebaseConfig = {
   apiKey: "AIzaSyDVWT2482mQTj8whjTWRLDAzY9Oa9mnw_E",
   authDomain: "farmsmilk.firebaseapp.com",
@@ -372,9 +1465,8 @@ const firebaseConfig = {
   appId: "1:175276296664:web:e4ba8302824164f9484aad",
   measurementId: "G-40HNB89JQZ"
 };
-const VAPID_KEY = "BHMV4mWiy11O_HG51y2iOkieJkYPi0jrLxI106vZ17XYNN1biVQXkeWYEdhfpi2HcutLO3SQPQkMO1u3nKXOY9o"; // Firebase Console → Project Settings → Cloud Messaging
+const VAPID_KEY = "BHMV4mWiy11O_HG51y2iOkieJkYPi0jrLxI106vZ17XYNN1biVQXkeWYEdhfpi2HcutLO3SQPQkMO1u3nKXOY9o";
 
-// ── Init ─────────────────────────────────────────────
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
@@ -384,7 +1476,6 @@ try { messaging = firebase.messaging(); } catch(e) {}
 let currentUser = null;
 let unsubscribe = null;
 
-// ── Auth State ────────────────────────────────────────
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
@@ -398,7 +1489,6 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// ── AUTH ─────────────────────────────────────────────
 window.handleLogin = async function() {
   const email = document.getElementById('login-email').value.trim();
   const pwd   = document.getElementById('login-password').value;
@@ -430,7 +1520,6 @@ window.handleLogout = async function() {
   toast('Signed out', 'info');
 };
 
-// ── SUBMIT REGISTRATION ───────────────────────────────
 window.submitRegistration = async function() {
   const plate   = v('f-plate');
   const driver  = v('f-driver');
@@ -439,36 +1528,21 @@ window.submitRegistration = async function() {
   const temp    = parseFloat(v('f-temp')) || null;
   const arrival = v('f-arrival');
   const notes   = v('f-notes');
-
   if (!plate||!driver||!qty||!arrival) { toast('Fill in required fields (*)', 'error'); return; }
-
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = 'Submitting...';
-
   try {
     const farmSnap = await db.collection('farms').where('uid','==',currentUser.uid).get();
     const farm = farmSnap.empty ? {} : farmSnap.docs[0].data();
-
     const ref = await db.collection('registrations').add({
-      uid:         currentUser.uid,
-      farmName:    farm.name  || currentUser.displayName || 'Unknown',
-      farmId:      farm.farmId || 'N/A',
-      email:       currentUser.email,
-      carPlate:    plate,
-      driver,
-      quantity:    qty,
-      milkType:    type,
-      temperature: temp,
-      arrivalTime: arrival,
-      notes,
-      status:      'pending',
-      labResult:   null,
-      sapDocId:    null,
-      rejectionReason: null,
-      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt:   firebase.firestore.FieldValue.serverTimestamp()
+      uid: currentUser.uid, farmName: farm.name||currentUser.displayName||'Unknown',
+      farmId: farm.farmId||'N/A', email: currentUser.email,
+      carPlate: plate, driver, quantity: qty, milkType: type,
+      temperature: temp, arrivalTime: arrival, notes,
+      status: 'pending', labResult: null, sapDocId: null, rejectionReason: null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-
     toast('✅ Submitted! ID: ' + ref.id.substring(0,8).toUpperCase(), 'success');
     document.getElementById('reg-form').reset();
     showView('my-registrations');
@@ -480,30 +1554,18 @@ window.submitRegistration = async function() {
   }
 };
 
-// ── REAL-TIME REGISTRATIONS ───────────────────────────
 function loadRegistrations() {
   if (unsubscribe) unsubscribe();
-  const q = db.collection('registrations')
-    .where('uid','==', currentUser.uid)
-    .orderBy('createdAt','desc');
-
+  const q = db.collection('registrations').where('uid','==', currentUser.uid).orderBy('createdAt','desc');
   unsubscribe = q.onSnapshot(snap => {
     const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderList(list);
-    updateStats(list);
-
+    renderList(list); updateStats(list);
     snap.docChanges().forEach(ch => {
       if (ch.type === 'modified') {
         const d = ch.doc.data();
         const id = ch.doc.id.substring(0,8).toUpperCase();
-        if (d.status === 'approved') {
-          toast('✅ #' + id + ' APPROVED — Come to the lab!', 'success');
-          beep(880); showDot();
-        }
-        if (d.status === 'rejected') {
-          toast('❌ #' + id + ' Rejected: ' + (d.rejectionReason||'Contact supervisor'), 'error');
-          beep(220); showDot();
-        }
+        if (d.status === 'approved') { toast('✅ #' + id + ' APPROVED — Come to the lab!', 'success'); beep(880); showDot(); }
+        if (d.status === 'rejected') { toast('❌ #' + id + ' Rejected: ' + (d.rejectionReason||'Contact supervisor'), 'error'); beep(220); showDot(); }
       }
     });
   });
@@ -513,7 +1575,7 @@ function renderList(list) {
   const el = document.getElementById('registrations-list');
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🚛</div><div class="empty-title">No registrations yet</div><div class="empty-sub">Submit your first milk car registration to get started</div><button class="btn btn-primary" onclick="showView('new-reg')">+ New Registration</button></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🚛</div><div class="empty-title">No registrations yet</div><div class="empty-sub">Submit your first milk car registration to get started</div><button class="btn btn-primary" onclick="showView('new-reg')" style="width:auto;padding:12px 24px">+ New Registration</button></div>`;
     return;
   }
   el.innerHTML = list.map(r => {
@@ -525,7 +1587,7 @@ function renderList(list) {
     return `
     <div class="reg-card ${r.status}">
       <div class="reg-card-header">
-        <span class="mono" style="font-size:12px;color:var(--text-muted)">#${r.id.substring(0,8).toUpperCase()}</span>
+        <span class="reg-card-id">#${r.id.substring(0,8).toUpperCase()}</span>
         <span class="badge ${sc}">${si} ${r.status.charAt(0).toUpperCase()+r.status.slice(1)}</span>
       </div>
       <div class="reg-info-grid">
@@ -546,13 +1608,12 @@ function updateStats(list) {
   setText('stat-pending',  list.filter(r=>r.status==='pending').length);
   setText('stat-approved', list.filter(r=>r.status==='approved').length);
   const tons = list.filter(r=>r.status==='approved').reduce((s,r)=>s+(r.quantity||0),0);
-  setText('stat-tons',     tons.toFixed(1)+'t');
+  setText('stat-tons', tons.toFixed(1)+'t');
   const pending = list.filter(r=>r.status==='pending').length;
   const badge = document.getElementById('pending-badge');
-  if (badge) { badge.textContent = pending||''; badge.style.display = pending?'inline':'none'; }
+  if (badge) { badge.textContent = pending||''; badge.style.display = pending ? 'flex' : 'none'; }
 }
 
-// ── PUSH NOTIFICATIONS ────────────────────────────────
 async function initPush() {
   if (!messaging) return;
   try {
@@ -571,7 +1632,6 @@ async function initPush() {
   } catch(e) { console.warn('Push setup:', e.message); }
 }
 
-// ── UI HELPERS ────────────────────────────────────────
 window.showView = function(name) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const el = document.getElementById('view-'+name);
@@ -579,11 +1639,10 @@ window.showView = function(name) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view===name));
   const titles = {'new-reg':'New Registration','my-registrations':'My Registrations','profile':'My Profile','notifications':'Notifications'};
   setText('page-title', titles[name]||'MilkTrack');
-  // Sync profile view
   if (name==='profile') {
-    setText('user-name-big',    currentUser?.displayName||'');
-    setText('user-avatar-big',  (currentUser?.displayName||'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase());
-    setText('user-email',       currentUser?.email||'');
+    setText('user-name-big',   currentUser?.displayName||'');
+    setText('user-avatar-big', (currentUser?.displayName||'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase());
+    setText('user-email',      currentUser?.email||'');
   }
 };
 
@@ -625,7 +1684,10 @@ function setText(id, val) { const e=document.getElementById(id); if(e) e.textCon
 function v(id) { const e=document.getElementById(id); return e ? e.value.trim() : ''; }
 
 function setBtnLoading(l) {
-  document.querySelectorAll('.auth-btn').forEach(b=>{ b.disabled=l; if(!l) b.textContent=b.dataset.label; else b.textContent='Please wait...'; });
+  document.querySelectorAll('.auth-btn').forEach(b=>{
+    b.disabled=l;
+    if(!l) b.textContent=b.dataset.label; else b.textContent='Please wait...';
+  });
 }
 
 function beep(freq=880) {
@@ -644,11 +1706,18 @@ function showDot() {
 }
 
 function fbErr(code) {
-  const m={'auth/email-already-in-use':'Email already registered.','auth/invalid-email':'Invalid email.','auth/weak-password':'Password too weak.','auth/user-not-found':'No account with this email.','auth/wrong-password':'Wrong password.','auth/too-many-requests':'Too many attempts. Wait and retry.','auth/network-request-failed':'Network error.'};
+  const m={
+    'auth/email-already-in-use':'Email already registered.',
+    'auth/invalid-email':'Invalid email.',
+    'auth/weak-password':'Password too weak.',
+    'auth/user-not-found':'No account with this email.',
+    'auth/wrong-password':'Wrong password.',
+    'auth/too-many-requests':'Too many attempts. Wait and retry.',
+    'auth/network-request-failed':'Network error.'
+  };
   return m[code]||'Error: '+code;
 }
 
-// ── SERVICE WORKER ────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/firebase-messaging-sw.js')
     .then(r => console.log('SW registered'))
